@@ -424,7 +424,7 @@
                   !-- convert from theta to temperature 
                   theta2temp = pi(i,k,j)
                   
-                  !-- temp/water vapor projected by the ´large-scale' forcing
+                  !-- temp/water vapor projected by the large-scale forcing
                   temp_new(k,i) = temp_old(k,i) + (rthblten  (i,k,j) + rthdyten  (i,k,j) + &
                                                    rthratenlw(i,k,j) + rthratensw(i,k,j) ) * dt * theta2temp
                   qv_new  (k,i) =   qv_old(k,i) + (rqvblten(i,k,j)+rqvdyten(i,k,j)) * dt
