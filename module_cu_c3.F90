@@ -7584,9 +7584,9 @@ module module_cu_c3
          hcts%ak0   = 0.0
          hcts%dak   = 0.0
       endif
-      ! informa que já inicializado
+      ! Flag indicating the module is already initialized.
       modconvpargf_initialized = .true.
-      ! retorna 0, foi inicializado dessa vez
+      ! Return 0 to indicate successful initialization
       is_init = 0
 
    end function initModConvParGF
