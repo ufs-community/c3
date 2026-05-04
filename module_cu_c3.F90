@@ -7466,13 +7466,13 @@ module module_cu_c3
       integer :: is_init
    
       !Code:
-      ! Se o módulo já foi inicializado retorna -1
+      !If the module has already been initialized, return -1
       if(modConvParGF_initialized) then
          is_init = -1
          return
       endif
 
-      !-- inicializa as variáveis do módulo
+      !Initialize the module variables.
       icumulus_gf      = (/1, 1, 0/)
       closure_choice   = (/10,10, 3/) 
       cum_entr_rate    = (/       &
