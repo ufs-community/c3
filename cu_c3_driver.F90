@@ -738,7 +738,7 @@ contains
      
      do i = its, itf
          
-        ! --- surface pressure (Pa → hPa) ---
+        ! --- surface pressure (Pa -> hPa) ---
         psur(i) = 0.01_kind_phys * psuri(i)
         
         ! --- terrain height ---
@@ -985,8 +985,8 @@ contains
       ! - clwup5d represents updraft condensate profile per plume
       ! - zup5d / zdn5d represent updraft/downdraft mass flux or velocity profiles
       ! - cnvwt and cupclw:
-      !     * cnvwt  → used to compute convective condensate tendencies (scaled by xmb*dt)
-      !     * cupclw → used for diagnostics/radiation coupling (e.g., gdc)
+      !     * cnvwt  -> used to compute convective condensate tendencies (scaled by xmb*dt)
+      !     * cupclw -> used for diagnostics/radiation coupling (e.g., gdc)
       !   For now, both are mapped to clwup5d pending further validation
       !-----------------------------------------------------------------------
 
