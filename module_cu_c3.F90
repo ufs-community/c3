@@ -9854,7 +9854,7 @@ module module_cu_c3
             sigx = 1.0 / (1.0 + exp(-alpha2 * (X - xc)))
             sigy = 1.0 / (1.0 + exp(-beta2  * (Y - yc)))
 
-            ! Função final
+            ! End of function
             scale_factor(i) = ( Rmin + (Rmax - Rmin) * sigx * sigy ) /Rmin
         enddo
         if( use_shear_ctrl_entr == 3 ) then 
