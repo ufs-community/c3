@@ -1,4 +1,4 @@
-!>\file cu_c3_driver.F90
+!>\file cu_c3_driver_ccpp.F90
 !! CCPP-facing C3 driver that preserves the existing CCPP interface
 !! while replacing the legacy deep/shallow entry points with a direct call to
 !! the shared CUP_C3 core used by MPAS.
@@ -11,7 +11,7 @@
 !!
 
 
-module cu_c3_driver
+module cu_c3_driver_ccpp
 
    use machine, only: kind_phys
    use progsigma, only: progsigma_calc
@@ -31,16 +31,16 @@ module cu_c3_driver
    implicit none
 
    private
-   public :: cu_c3_driver_run, progsigma_calc
+   public :: cu_c3_driver_ccpp_run, progsigma_calc
 
 contains
 
 !> This is the Grell-Freitas convection scheme driver module.
-!! \section arg_table_cu_c3_driver_run Argument Table
-!! \htmlinclude cu_c3_driver_run.html
+!! \section arg_table_cu_c3_driver_ccpp_run Argument Table
+!! \htmlinclude cu_c3_driver_ccpp_run.html
 !!
 !>\section gen_c3_driver Grell-Freitas Cumulus Scheme Driver General Algorithm
-      subroutine cu_c3_driver_run(mype,ntracer,garea,im,km,dt,flag_init,flag_restart, &
+      subroutine cu_c3_driver_ccpp_run(mype,ntracer,garea,im,km,dt,flag_init,flag_restart, &
            do_ca,progsigma,cactiv,cactiv_m,g,cp,fv,r_d,xlv,r_v,tsfc,xlon,xlat, &
            tke_pbl,ten_t_pbl,ten_q_pbl,forcet,                              &
            forceqv_spechum,phil,prslk,delp,raincv,tmf,qmicro,sigmain,       &
@@ -249,7 +249,7 @@ contains
       ichoice_s = ichoice_s_in
 
       ! --- retain the existing CCPP setup logic ---
-      ! --- this section is intentionally close to the current cu_c3_driver.F90 ---
+      ! --- this section is intentionally close to the current cu_c3_driver_ccpp.F90 ---
 
      if(do_cap_suppress) then
 !$acc serial
@@ -1085,7 +1085,7 @@ contains
 !$acc parallel loop private(kstop,dtime_max,massflx,trcflx_in1,clw_in1,po_cup)
 
       !This post processing code is from the original
-      !CCPP cu_c3_driver.F90 slightly cleaned up here:
+      !CCPP cu_c3_driver_ccpp.F90 slightly cleaned up here:
 
       do i = its, itf
          
@@ -1411,6 +1411,6 @@ contains
 !$acc end parallel
           endif
         endif
-   end subroutine cu_c3_driver_run
+   end subroutine cu_c3_driver_ccpp_run
 !>@}
-end module cu_c3_driver
+end module cu_c3_driver_ccpp

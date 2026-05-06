@@ -1,12 +1,12 @@
 [ccpp-table-properties]
-  name = cu_c3_driver
+  name = cu_c3_driver_ccpp
   type = scheme
-  dependencies = ../../hooks/machine.F
-  dependencies = modGate.F90,modConstants.F90,modHenrysLawCts.F90,modVector.F90,module_cu_c3.F90
-  dependencies = ../progsigma_calc.f90
+  dependencies = ../../../hooks/machine.F
+  dependencies = ../modGate.F90,../modConstants.F90,../modHenrysLawCts.F90,../modVector.F90,../module_cu_c3.F90
+  dependencies = ../../progsigma_calc.f90
 ########################################################################
 [ccpp-arg-table]
-  name = cu_c3_driver_run
+  name = cu_c3_driver_ccpp_run
   type = scheme
 [mype]
   standard_name = mpi_rank
