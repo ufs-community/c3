@@ -13,7 +13,7 @@
 
 module cu_c3_driver_ccpp
 
-   use machine, only: kind_phys
+   use mod_cu_kinds, only: kind_phys
    use progsigma, only: progsigma_calc
    use module_cu_c3, only: maxiens, deep, shal, mid, nmp,                    &
         icumulus_gf, cumulus_type, closure_choice, cum_entr_rate,            &

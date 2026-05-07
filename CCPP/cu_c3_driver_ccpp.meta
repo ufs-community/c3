@@ -2,7 +2,7 @@
   name = cu_c3_driver_ccpp
   type = scheme
   dependencies = ../../../hooks/machine.F
-  dependencies = ../modGate.F90,../modConstants.F90,../modHenrysLawCts.F90,../modVector.F90,../module_cu_c3.F90
+  dependencies = ../modGate.F90,../modConstants.F90,../modHenrysLawCts.F90,../modVector.F90,../module_cu_c3.F90,../mod_cu_kinds.F90
   dependencies = ../../progsigma_calc.f90
 ########################################################################
 [ccpp-arg-table]
