@@ -14,6 +14,7 @@
 module cu_c3_driver_ccpp
 
    use mod_cu_kinds, only: kind_phys
+   use modNegCheck, only: neg_check
    use progsigma, only: progsigma_calc
    use module_cu_c3, only: maxiens, deep, shal, mid, nmp,                    &
         icumulus_gf, cumulus_type, closure_choice, cum_entr_rate,            &
@@ -154,7 +155,7 @@ contains
       integer, dimension(im) :: kbconm,ktopm,k22m
       real(kind=kind_phys), dimension(im,km) :: rho_dryar
       integer, parameter :: ipn = 0
-      real(kind=kind_phys), dimension(im,km) :: qcheck,zo,t2d,q2d,po,p2d,rhoi,clw_ten,new_qv_spechum,new_cliw,new_clcw
+      real(kind=kind_phys), dimension(im,km) :: zo,t2d,q2d,po,p2d,rhoi,clw_ten,new_qv_spechum,new_cliw,new_clcw
       real(kind=kind_phys), dimension(im,km) :: tn,qo,tshall,qshall,dz8w,omeg
       real(kind=kind_phys), dimension(im) :: z1,psur,cuten,cutens,cutenm
       real(kind=kind_phys), dimension(im) :: umean,vmean,pmean,mc_thresh
@@ -168,9 +169,11 @@ contains
       real(kind=kind_phys), dimension(im) :: flux_tun,tun_rad_mid,tun_rad_shall,tun_rad_deep
       character(len=50) :: ierrc(im),ierrcm(im),ierrcs(im)
       real(kind=kind_phys), dimension(im) :: hfx,qfx
-      real(kind=kind_phys) :: tem,tem1,tf,tcr,tcrf,psum
+      real(kind=kind_phys) :: tem,tem1,tf,tcr,tcrf,psum,arg_deep,arg_mid,arg_shal
       real(kind=kind_phys) :: cliw_shal,clcw_shal,tem_shal, cliw_both, weight_sum
       real(kind=kind_phys) :: cliw_deep,clcw_deep,tem_deep, clcw_both
+      real(kind=kind_phys) :: t_tend, qv_tend, u_tend, v_tend
+      real(kind=kind_phys) :: gdc_cloud
       integer :: cliw_deep_idx, clcw_deep_idx, cliw_shal_idx, clcw_shal_idx
       real(kind=kind_phys) :: cap_suppress_j(im)
       integer :: itime, do_cap_suppress_here
@@ -302,10 +305,10 @@ contains
 ! TODO these should be coming in from outside
 !
 !    cactiv(:)      = 0
-     rand_mom(:)    = 0.
-     rand_vmas(:)   = 0.
-     rand_clos(:,:) = 0.
-     lightn_dens(:) = 0.
+     rand_mom(:)    = 0._kind_phys
+     rand_vmas(:)   = 0._kind_phys
+     rand_clos(:,:) = 0._kind_phys
+     lightn_dens(:) = 0._kind_phys
      kcnv(:) = 0
      
 !$acc end kernels
@@ -328,10 +331,10 @@ contains
      tun_rad_shall(:)=.012
      tun_rad_mid(:)=.15 !.02
      tun_rad_deep(:)=.3 !.065
-     edt(:)=0.
-     edtm(:)=0.
-     edtd(:)=0.
-     zdd(:,:)=0.
+     edt(:)=0._kind_phys
+     edtm(:)=0._kind_phys
+     edtd(:)=0._kind_phys
+     zdd(:,:)=0._kind_phys
      flux_tun(:)=5.
 ! dx for scale awareness
 !$acc end kernels
@@ -342,23 +345,23 @@ contains
       ishallow_g3 = 0
      end if
      high_resolution=0
-     subcenter=0.
+     subcenter=0._kind_phys
 
 !$acc kernels
-     ud_mf(:,:) =0.
-     dd_mf(:,:) =0.
-     dt_mf(:,:) =0.
-     tau_ecmwf(:)=0.
+     ud_mf(:,:) =0._kind_phys
+     dd_mf(:,:) =0._kind_phys
+     dt_mf(:,:) =0._kind_phys
+     tau_ecmwf(:)=0._kind_phys
 !$acc end kernels
 
 !$acc kernels
      ht(:)=phil(:,1)/g
 !$acc loop private(zh)
      do i=its,ite
-      cld1d(i)=0.
+      cld1d(i)=0._kind_phys
       zo(i,:)=phil(i,:)/g
       dz8w(i,1)=zo(i,2)-zo(i,1)
-      zh(1)=0.
+      zh(1)=0._kind_phys
       kpbli(i)=2
       do k=kts+1,ktf
        dz8w(i,k)=zo(i,k+1)-zo(i,k)
@@ -376,10 +379,10 @@ contains
 
 !$acc kernels
      do i= its,itf
-      forcing(i,:)=0.
-      forcing2(i,:)=0.
-      ccn_gf(i) = 0.
-      ccn_m(i) = 0.
+      forcing(i,:)=0._kind_phys
+      forcing2(i,:)=0._kind_phys
+      ccn_gf(i) = 0._kind_phys
+      ccn_m(i) = 0._kind_phys
 
       ! set aod and ccn
       if (flag_init .and. .not.flag_restart) then
@@ -398,22 +401,22 @@ contains
 
       hbot(i)  =kte
       htop(i)  =kts
-      raincv(i)=0.
+      raincv(i)=0._kind_phys
       xlandi(i)=real(xland(i))
 !     if(abs(xlandi(i)-1.).le.1.e-3) tun_rad_shall(i)=.15
 !     if(abs(xlandi(i)-1.).le.1.e-3) flux_tun(i)=1.5
      enddo
      do i= its,itf
-      mconv(i)=0.
+      mconv(i)=0._kind_phys
      enddo
      do k=kts,kte
       do i= its,itf
-       omeg(i,k)=0.
-       zu(i,k)=0.
-       zum(i,k)=0.
-       zus(i,k)=0.
-       zd(i,k)=0.
-       zdm(i,k)=0.
+       omeg(i,k)=0._kind_phys
+       zu(i,k)=0._kind_phys
+       zum(i,k)=0._kind_phys
+       zus(i,k)=0._kind_phys
+       zd(i,k)=0._kind_phys
+       zdm(i,k)=0._kind_phys
       enddo
      enddo
 
@@ -423,17 +426,17 @@ contains
      enddo
      do k=kts,kte
       do i=its,ite
-       cnvw(i,k)=0.
-       cnvc(i,k)=0.
-       gdc(i,k,1)=0.
-       gdc(i,k,2)=0.
-       gdc(i,k,3)=0.
-       gdc(i,k,4)=0.
-       gdc(i,k,7)=0.
-       gdc(i,k,8)=0.
-       gdc(i,k,9)=0.
-       gdc(i,k,10)=0.
-       gdc2(i,k,1)=0.
+       cnvw(i,k)=0._kind_phys
+       cnvc(i,k)=0._kind_phys
+       gdc(i,k,1)=0._kind_phys
+       gdc(i,k,2)=0._kind_phys
+       gdc(i,k,3)=0._kind_phys
+       gdc(i,k,4)=0._kind_phys
+       gdc(i,k,7)=0._kind_phys
+       gdc(i,k,8)=0._kind_phys
+       gdc(i,k,9)=0._kind_phys
+       gdc(i,k,10)=0._kind_phys
+       gdc2(i,k,1)=0._kind_phys
       enddo
      enddo
 
@@ -446,9 +449,9 @@ contains
      ierr(:)=-99
      ierrm(:)=-99
      ierrs(:)=-99
-     cuten(:)=0.
-     cutenm(:)=0.
-     cutens(:)=0.
+     cuten(:)=0._kind_phys
+     cutenm(:)=0._kind_phys
+     cutens(:)=0._kind_phys
 !$acc end kernels
      ierrc(:)=" "
 !$acc kernels
@@ -462,11 +465,11 @@ contains
      ktops(:)=0
      ktopm(:)=0
 
-     xmb(:)=0.
-     xmb_dumm(:)=0.
-     xmbm(:)=0.
-     xmbs(:)=0.
-     xmbs2(:)=0.
+     xmb(:)=0._kind_phys
+     xmb_dumm(:)=0._kind_phys
+     xmbm(:)=0._kind_phys
+     xmbs(:)=0._kind_phys
+     xmbs2(:)=0._kind_phys
 
      k22s(:)=0
      k22m(:)=0
@@ -475,62 +478,62 @@ contains
      jmin(:)=0
      jminm(:)=0
 
-     pret(:)=0.
-     prets(:)=0.
-     pretm(:)=0.
+     pret(:)=0._kind_phys
+     prets(:)=0._kind_phys
+     pretm(:)=0._kind_phys
 
-     umean(:)=0.
-     vmean(:)=0.
-     pmean(:)=0.
+     umean(:)=0._kind_phys
+     vmean(:)=0._kind_phys
+     pmean(:)=0._kind_phys
 
-     cupclw(:,:)=0.
-     cupclwm(:,:)=0.
-     cupclws(:,:)=0.
+     cupclw(:,:)=0._kind_phys
+     cupclwm(:,:)=0._kind_phys
+     cupclws(:,:)=0._kind_phys
 
-     cnvwt(:,:)=0.
-     cnvwts(:,:)=0.
-     cnvwtm(:,:)=0.
+     cnvwt(:,:)=0._kind_phys
+     cnvwts(:,:)=0._kind_phys
+     cnvwtm(:,:)=0._kind_phys
 
-     hco(:,:)=0.
-     hcom(:,:)=0.
-     hcdo(:,:)=0.
-     hcdom(:,:)=0.
+     hco(:,:)=0._kind_phys
+     hcom(:,:)=0._kind_phys
+     hcdo(:,:)=0._kind_phys
+     hcdom(:,:)=0._kind_phys
 
-     outt(:,:)=0.
-     outts(:,:)=0.
-     outtm(:,:)=0.
+     outt(:,:)=0._kind_phys
+     outts(:,:)=0._kind_phys
+     outtm(:,:)=0._kind_phys
 
-     outu(:,:)=0.
-     outus(:,:)=0.
-     outum(:,:)=0.
+     outu(:,:)=0._kind_phys
+     outus(:,:)=0._kind_phys
+     outum(:,:)=0._kind_phys
 
-     outv(:,:)=0.
-     outvs(:,:)=0.
-     outvm(:,:)=0.
+     outv(:,:)=0._kind_phys
+     outvs(:,:)=0._kind_phys
+     outvm(:,:)=0._kind_phys
 
-     outq(:,:)=0.
-     outqs(:,:)=0.
-     outqm(:,:)=0.
+     outq(:,:)=0._kind_phys
+     outqs(:,:)=0._kind_phys
+     outqm(:,:)=0._kind_phys
 
-     outqc(:,:)=0.
-     outqcs(:,:)=0.
-     outqcm(:,:)=0.
+     outqc(:,:)=0._kind_phys
+     outqcs(:,:)=0._kind_phys
+     outqcm(:,:)=0._kind_phys
 
-     subm(:,:)=0.
-     dhdt(:,:)=0.
+     subm(:,:)=0._kind_phys
+     dhdt(:,:)=0._kind_phys
 
-     frhm(:)=0.
-     frhd(:)=0.
+     frhm(:)=0._kind_phys
+     frhd(:)=0._kind_phys
 
-     temp_old(:,:)     = 0.0
-     temp_new(:,:)     = 0.0
-     temp_new_BL(:,:)  = 0.0
-     temp_new_ADV(:,:) = 0.0
+     temp_old(:,:)     = 0._kind_phys
+     temp_new(:,:)     = 0._kind_phys
+     temp_new_BL(:,:)  = 0._kind_phys
+     temp_new_ADV(:,:) = 0._kind_phys
      
-     qv_old(:,:)       = 0.0
-     qv_new(:,:)       = 0.0
-     qv_new_BL(:,:)    = 0.0
-     qv_new_ADV(:,:)   = 0.0
+     qv_old(:,:)       = 0._kind_phys
+     qv_new(:,:)       = 0._kind_phys
+     qv_new_BL(:,:)    = 0._kind_phys
+     qv_new_ADV(:,:)   = 0._kind_phys
 
      !-----------------------------------------------------------------------
      ! LB: Convert FV3/CCPP specific humidity to dry-air mixing ratio.
@@ -588,19 +591,19 @@ contains
            
            ! Previous timestep / before dynamics
            temp_old(i,k) = t2di(i,k) - forcet(i,k) * dt
-           qv_old(i,k)   = max(1.0e-16_kind_phys, qv2di(i,k) - forceqv(i,k) * dt)
+           qv_old(i,k)   = max(1.e-16_kind_phys,qv2di(i,k) - forceqv(i,k) * dt)
            
            ! Current state entering convection
            temp_new(i,k) = t(i,k)
-           qv_new(i,k)   = max(1.0e-16_kind_phys, qv(i,k))
+           qv_new(i,k)   = max(1.e-16_kind_phys,qv(i,k))
            
            ! Dynamics-only state
            temp_new_ADV(i,k) = t2di(i,k)
-           qv_new_ADV(i,k)   = max(1.0e-16_kind_phys, qv2di(i,k))
+           qv_new_ADV(i,k)   = max(1.e-16_kind_phys,qv2di(i,k))
            
            ! PBL-only state reconstructed from old state
            temp_new_BL(i,k) = temp_old(i,k) + ten_t_pbl(i,k) * dt
-           qv_new_BL(i,k)   = max(1.0e-16_kind_phys, qv_old(i,k) + ten_q_pbl_mr(i,k) * dt)
+           qv_new_BL(i,k)   = max(1.e-16_kind_phys,qv_old(i,k)) + ten_q_pbl_mr(i,k) * dt
            
            ! Total moist-static-energy forcing 
            dhdt(i,k) = cp  * ((temp_new(i,k) - temp_old(i,k)) / dt) + &
@@ -618,22 +621,20 @@ contains
            
            rhoi(i,k) = 100.*p2d(i,k) / &
                 (287.04*(temp_new_ADV(i,k)*(1.+0.608*qv_new_ADV(i,k))))
-           
-           qcheck(i,k) = qv_new(i,k)
                       
            ! shallow/PBL state
            tshall(i,k) = temp_new_BL(i,k)
-           qshall(i,k) = qv_new_BL(i,k)
+           qshall(i,k) = max(1.e-16,qv_new_BL(i,k))
 
         end do
      end do
 
      !Turbulent kinetic energy
      do i = its, itf
-        tke_mean(i) = 0.0
-        total_dp = 0.0
+        tke_mean(i) = 0._kind_phys
+        total_dp = 0._kind_phys
         do k = kts+1, kpbli(i)-1
-           dp = -0.5*(po(k+1,i)-po(k-1,i))
+           dp = -0.5*(po(i,k+1)-po(i,k-1))
            tke_mean(i) = tke_mean(i) + (tke_pbl(i,k)/2.0)*dp
            !TODO:TKE division by two above because how tke_pbl is saved in the MYNN scheme.
            !Need to make this less scheme dependent in the future
@@ -687,7 +688,7 @@ contains
       enddo
      enddo
      do i = its,itf
-       psum=0.
+       psum=0._kind_phys
        do k=kts,ktf-3
         if (clcw(i,k) .gt. -999.0 .and. clcw(i,k+1) .gt. -999.0 )then
            dp=(p2d(i,k)-p2d(i,k+1))
@@ -991,7 +992,7 @@ contains
       !-----------------------------------------------------------------------
 
       do i = its, itf
-         do k = kts, kte
+         do k = kts, ktf
             
             ! Convective condensate profile (per plume)
             ! Used later to compute cnvw = cnvwt * xmb * dt
@@ -1034,7 +1035,14 @@ contains
       !-----------------------------------------------------------------------
       
       do i = its, itf
-         
+
+          ! Deep default
+         kbcon(i) = 0
+         ktop(i)  = 0
+         ierr(i)  = ierr4d(i,deep)
+         xmb(i)   = 0.0_kind_phys
+         edt(i)   = 0.0_kind_phys
+         pret(i)  = 0.0_kind_phys
          ! Deep plume
          if(ierr4d (i,deep )==0 ) then
             kbcon(i) = kbcon4d(i,deep)
@@ -1044,7 +1052,14 @@ contains
             edt(i)   = edt4d(i,deep)
             pret(i)  = cprr4d(i,deep)
          endif
-         
+
+         !Shallow default
+         kbcons(i) = 0
+         ktops(i)  = 0
+         ierrs(i)  = ierr4d(i,shal)
+         xmbs(i)   = 0.0_kind_phys
+         edtm(i)   = 0.0_kind_phys
+         prets(i)  = 0.0_kind_phys
          ! Shallow plume
          if(ierr4d (i,shal )==0 ) then
             kbcons(i) = kbcon4d(i,shal)
@@ -1054,7 +1069,14 @@ contains
             edtm(i)   = edt4d(i,shal)
             prets(i)  = cprr4d(i,shal)
          endif
-         
+
+         !Mid default
+          kbconm(i) = 0
+          ktopm(i)  = 0
+          ierrm(i)  = ierr4d(i,mid)
+          xmbm(i)   = 0.0_kind_phys
+          edtm(i)   = 0.0_kind_phys
+          pretm(i)  = 0.0_kind_phys
          ! Mid/congestus plume
          if(ierr4d (i,mid )==0 ) then
             kbconm(i) = kbcon4d(i,mid)
@@ -1082,7 +1104,7 @@ contains
       ! LB TODO:
       !  * add chemistry and microphysics coupling 
 
-!$acc parallel loop private(kstop,dtime_max,massflx,trcflx_in1,clw_in1,po_cup)
+
 
       !This post processing code is from the original
       !CCPP cu_c3_driver_ccpp.F90 slightly cleaned up here:
@@ -1133,6 +1155,22 @@ contains
          endif
          
       end do
+
+      ! Limit excessive tendencies and prevent negative qv before applying updates.
+      if (icumulus_gf(deep) /= OFF) then
+         call neg_check('deep', 1, dt, qv, outq, outt, outu, outv, outqc, pret, &
+              its, ite, kts, kte, itf, ktf, ktop)
+      endif
+      
+      if (icumulus_gf(shal) /= OFF) then
+         call neg_check('shallow', 1, dt, qv, outqs, outts, outus, outvs, outqcs, prets, &
+              its, ite, kts, kte, itf, ktf, ktops)
+      endif
+      
+      if (icumulus_gf(mid) /= OFF) then
+         call neg_check('mid', 1, dt, qv, outqm, outtm, outum, outvm, outqcm, pretm, &
+              its, ite, kts, kte, itf, ktf, ktopm)
+      endif
       
       do i=its,itf
          massflx(:)=0.
@@ -1145,6 +1183,7 @@ contains
          kstop=kts
          if(ktopm(i).gt.kts .or. ktop(i).gt.kts)kstop=max(ktopm(i),ktop(i))
          if(ktops(i).gt.kts)kstop=max(kstop,ktops(i))
+         kstop = min(kstop, ktf)
          if(kstop.gt.2)then
             htop(i)=kstop
             if(kbcon(i).gt.2 .or. kbconm(i).gt.2)then
@@ -1154,90 +1193,179 @@ contains
             dtime_max=dt
             forcing2(i,3)=0.
             do k=kts,kstop
-               cnvc(i,k) = 0.04 * log(1. + 675. * zu(i,k) * xmb(i)) +   &
-                    0.04 * log(1. + 675. * zum(i,k) * xmbm(i)) + &
-                    0.04 * log(1. + 675. * zus(i,k) * xmbs(i))
-               cnvc(i,k) = min(cnvc(i,k), 0.6)
-               cnvc(i,k) = max(cnvc(i,k), 0.0)
-               cnvw(i,k)=cnvwt(i,k)*xmb(i)*dt+cnvwts(i,k)*xmbs(i)*dt+cnvwtm(i,k)*xmbm(i)*dt
-               ud_mf(i,k)=cuten(i)*zu(i,k)*xmb(i)*dt
-               dd_mf(i,k)=cuten(i)*zd(i,k)*edt(i)*xmb(i)*dt
+               arg_deep = 1.0_kind_phys
+               arg_mid  = 1.0_kind_phys
+               arg_shal = 1.0_kind_phys
+               t_tend  = 0.0_kind_phys
+               qv_tend = 0.0_kind_phys
+               u_tend  = 0.0_kind_phys
+               v_tend  = 0.0_kind_phys
+               gdc_cloud = 0.0_kind_phys
+               gdc(i,k,1)=0._kind_phys
+               gdc(i,k,2)=0._kind_phys
+               gdc(i,k,3)=0._kind_phys
+               gdc(i,k,4)=0._kind_phys
+               gdc(i,k,7)=0._kind_phys
+               gdc(i,k,8)=0._kind_phys
+               gdc(i,k,9)=0._kind_phys
+               gdc(i,k,10)=0._kind_phys
+               gdc2(i,k,1)=0._kind_phys
                
-               ten_t(i,k) = cutens(i)*outts(i,k)+cutenm(i)*outtm(i,k)+outt(i,k)*cuten(i)
-               qv(i,k)=max(1.e-16,qv(i,k)+dt*(cutens(i)*outqs(i,k)+cutenm(i)*outqm(i,k)+outq(i,k)*cuten(i)))
-               gdc(i,k,7)=sqrt(us(i,k)**2 +vs(i,k)**2)
-               ten_u(i,k) = outu(i,k)*cuten(i) +outum(i,k)*cutenm(i) +outus(i,k)*cutens(i)
-               ten_v(i,k) = outv(i,k)*cuten(i) +outvm(i,k)*cutenm(i) +outvs(i,k)*cutens(i)
+               if (xmb(i)  > 0.0_kind_phys) arg_deep = max(1.0_kind_phys, 1.0_kind_phys + 675.0_kind_phys*zu(i,k)*xmb(i))
+               if (xmbm(i) > 0.0_kind_phys) arg_mid  = max(1.0_kind_phys, 1.0_kind_phys + 675.0_kind_phys*zum(i,k)*xmbm(i))
+               if (xmbs(i) > 0.0_kind_phys) arg_shal = max(1.0_kind_phys, 1.0_kind_phys + 675.0_kind_phys*zus(i,k)*xmbs(i))
                
-               gdc(i,k,1)= max(0.,tun_rad_shall(i)*cupclws(i,k)*cutens(i))      ! my mod
-               !gdc2(i,k,1)=max(0.,tun_rad_deep(i)*(cupclwm(i,k)*cutenm(i)+cupclw(i,k)*cuten(i)))
-               gdc2(i,k,1)=max(0.,tun_rad_mid(i)*cupclwm(i,k)*cutenm(i)+tun_rad_deep(i)*cupclw(i,k)*cuten(i)+tun_rad_shall(i)*cupclws(i,k)*cutens(i))
-               !gdc2(i,k,1) = min(0.1, max(0.01, tun_rad_mid(i)*frhm(i)))*cupclwm(i,k)*cutenm(i) + min(0.1, max(0.01, tun_rad_deep(i)*(frhd(i))))*cupclw(i,k)*cuten(i) + tun_rad_shall(i)*cupclws(i,k)*cutens(i)
-               qci_conv(i,k)=gdc2(i,k,1)
-               gdc(i,k,2)=(outt(i,k))*86400.
-               gdc(i,k,3)=(outtm(i,k))*86400.
-               gdc(i,k,4)=(outts(i,k))*86400.
-               gdc(i,k,7)=-(gdc(i,k,7)-sqrt(us(i,k)**2 +vs(i,k)**2))/dt
-               !gdc(i,k,8)=(outq(i,k))*86400.*xlv/cp
-               gdc(i,k,8)=(outqm(i,k)+outqs(i,k)+outq(i,k))*86400.*xlv/cp
-               gdc(i,k,9)=gdc(i,k,2)+gdc(i,k,3)+gdc(i,k,4)
+               cnvc(i,k) = 0.04_kind_phys * (log(arg_deep) + log(arg_mid) + log(arg_shal))
+               cnvc(i,k) = min(cnvc(i,k), 0.6_kind_phys)
+               cnvc(i,k) = max(cnvc(i,k), 0.0_kind_phys)
+
+               if (xmb(i) > 0.0_kind_phys) then
+                  cnvw(i,k) = cnvw(i,k) + cnvwt(i,k) * xmb(i) * dt
+                  ud_mf(i,k)=cuten(i)*zu(i,k)*xmb(i)*dt
+                  dd_mf(i,k)=cuten(i)*zd(i,k)*edt(i)*xmb(i)*dt
+               endif
+               
+               if (xmbs(i) > 0.0_kind_phys) then
+                  cnvw(i,k) = cnvw(i,k) + cnvwts(i,k) * xmbs(i) * dt
+               endif
+               
+               if (xmbm(i) > 0.0_kind_phys) then
+                  cnvw(i,k) = cnvw(i,k) + cnvwtm(i,k) * xmbm(i) * dt
+               endif
+
+               if (cutens(i) > 0.0_kind_phys) then
+                  t_tend  = t_tend  + outts(i,k)
+                  qv_tend = qv_tend + outqs(i,k)
+                  u_tend  = u_tend  + outus(i,k)
+                  v_tend  = v_tend  + outvs(i,k)
+                  gdc_cloud = gdc_cloud + tun_rad_shall(i) * cupclws(i,k)
+                  gdc(i,k,1) = max(0.0_kind_phys, tun_rad_shall(i) * cupclws(i,k))
+                  gdc(i,k,4) = outts(i,k) * 86400.0_kind_phys
+                  gdc(i,k,8) = gdc(i,k,8) + outqs(i,k)
+               endif
+               
+               if (cutenm(i) > 0.0_kind_phys) then
+                  t_tend  = t_tend  + outtm(i,k)
+                  qv_tend = qv_tend + outqm(i,k)
+                  u_tend  = u_tend  + outum(i,k)
+                  v_tend  = v_tend  + outvm(i,k)
+                  gdc_cloud = gdc_cloud + tun_rad_mid(i) * cupclwm(i,k)
+                  gdc(i,k,3) = outtm(i,k) * 86400.0_kind_phys
+                  gdc(i,k,8) = gdc(i,k,8) + outqm(i,k)
+               endif
+
+               if (cuten(i) > 0.0_kind_phys) then
+                  t_tend  = t_tend  + outt(i,k)
+                  qv_tend = qv_tend + outq(i,k)
+                  u_tend  = u_tend  + outu(i,k)
+                  v_tend  = v_tend  + outv(i,k)
+                  gdc_cloud = gdc_cloud + tun_rad_deep(i) * cupclw(i,k)
+                  gdc(i,k,2) = outt(i,k) * 86400.0_kind_phys
+                  gdc(i,k,8) = gdc(i,k,8) + outq(i,k)
+               endif
+
+               ten_t(i,k) = t_tend
+               ten_u(i,k) = u_tend
+               ten_v(i,k) = v_tend
+               qv(i,k) = qv(i,k) + dt * qv_tend
+
+               gdc(i,k,8) = gdc(i,k,8) * 86400.0_kind_phys * xlv / cp
+               gdc(i,k,9) = gdc(i,k,2) + gdc(i,k,3) + gdc(i,k,4)
+               gdc(i,k,7) = -(gdc(i,k,7) - sqrt(us(i,k)**2 + vs(i,k)**2)) / dt
+
+               gdc2(i,k,1) = max(0.0_kind_phys, gdc_cloud)
+               qci_conv(i,k) = gdc2(i,k,1)
                
                !> - FCT treats subsidence effect to cloud ice/water (begin)
-               dp=100.*(p2d(i,k)-p2d(i,k+1))
-               dtime_max=min(dtime_max,.5*dp)
-               po_cup(k)=.5*(p2d(i,k)+p2d(i,k+1))
-               if (clcw(i,k) .gt. -999.0 .and. clcw(i,k+1) .gt. -999.0 )then
-                  clwtot = cliw(i,k) + clcw(i,k)
-                  if(clwtot.lt.1.e-32)clwtot=0.
-                  clwtot1= cliw(i,k+1) + clcw(i,k+1)
-                  if(clwtot1.lt.1.e-32)clwtot1=0.
-                  clw_in1(k)=clwtot
-                  massflx(k)=-(xmb(i) *( zu(i,k)- edt(i)* zd(i,k)))   &
-                       -(xmbm(i)*(zdm(i,k)-edtm(i)*zdm(i,k)))   &
-                       -(xmbs(i)*zus(i,k))
-                  trcflx_in1(k)=massflx(k)*.5*(clwtot+clwtot1)
-                  forcing2(i,3)=forcing2(i,3)+clwtot
-               endif
-            enddo
-            
-            massflx   (1)=0.
-            trcflx_in1(1)=0.
-            call fct1d3(kstop, kte, dtime_max, po_cup,                  &
-                 clw_in1, massflx, trcflx_in1, clw_ten(i,:))
-            
-            do k=1,kstop
-               tem  = dt*(outqcs(i,k)*cutens(i)+outqc(i,k)*cuten(i)    &
-                    +outqcm(i,k)*cutenm(i)                           &
-                    +clw_ten(i,k)                                    &
-                    )
-               tem1 = max(0.0, min(1.0, (tcr-t(i,k))*tcrf))
-               if (clcw(i,k) .gt. -999.0) then
-                  new_cliw(i,k) = max(0.,cliw(i,k) + tem * tem1)            ! ice
-                  new_clcw(i,k) = max(0.,clcw(i,k) + tem *(1.0-tem1))       ! water
-                  dcliw(i,k) = (new_cliw(i,k) - cliw(i,k))/dt
-                  dclcw(i,k) = (new_clcw(i,k) - clcw(i,k))/dt
-               else
-                  new_cliw(i,k) = max(0.,cliw(i,k) + tem)
-                  dcliw(i,k) = (new_cliw(i,k) - cliw(i,k))/dt
+               dp = 100.0_kind_phys * (p2d(i,k) - p2d(i,k+1))
+               dtime_max = min(dtime_max, 0.5_kind_phys * dp)
+               po_cup(k) = 0.5_kind_phys * (p2d(i,k) + p2d(i,k+1))
+               
+               if (clcw(i,k) > -999.0_kind_phys .and. clcw(i,k+1) > -999.0_kind_phys) then
+                  
+                  clwtot  = cliw(i,k)   + clcw(i,k)
+                  clwtot1 = cliw(i,k+1) + clcw(i,k+1)
+                  
+                  if (clwtot  < 1.0e-32_kind_phys) clwtot  = 0.0_kind_phys
+                  if (clwtot1 < 1.0e-32_kind_phys) clwtot1 = 0.0_kind_phys
+                  
+                  clw_in1(k) = clwtot
+                  
+                  massflx(k) = 0.0_kind_phys
+                  
+                  if (xmb(i) > 0.0_kind_phys) then
+                     massflx(k) = massflx(k) - xmb(i) * (zu(i,k) - edt(i)*zd(i,k))
+                  endif
+                  
+                  if (xmbm(i) > 0.0_kind_phys) then
+                     massflx(k) = massflx(k) - xmbm(i) * (zum(i,k) - edtm(i)*zdm(i,k))
+                  endif
+                  
+                  if (xmbs(i) > 0.0_kind_phys) then
+                     massflx(k) = massflx(k) - xmbs(i) * zus(i,k)
+                  endif
+                  
+                  trcflx_in1(k) = massflx(k) * 0.5_kind_phys * (clwtot + clwtot1)
+                  forcing2(i,3) = forcing2(i,3) + clwtot
+                  
                endif
                
             enddo
             
-            gdc(i,1,10)=forcing(i,1)
-            gdc(i,2,10)=forcing(i,2)
-            gdc(i,3,10)=forcing(i,3)
-            gdc(i,4,10)=forcing(i,4)
-            gdc(i,5,10)=forcing(i,5)
-            gdc(i,6,10)=forcing(i,6)
-            gdc(i,7,10)=forcing(i,7)
-            gdc(i,8,10)=forcing(i,8)
-            gdc(i,10,10)=xmb(i)
-            gdc(i,11,10)=xmbm(i)
-            gdc(i,12,10)=xmbs(i)
-            gdc(i,13,10)=hfx(i)
-            gdc(i,15,10)=qfx(i)
-            gdc(i,16,10)=pret(i)*3600.
+            massflx(1)    = 0.0_kind_phys
+            trcflx_in1(1) = 0.0_kind_phys
             
+            call fct1d3(kstop, kte, dtime_max, po_cup, &
+                 clw_in1, massflx, trcflx_in1, clw_ten(i,:))
+            
+            do k = kts, kstop
+               
+               tem = clw_ten(i,k)
+               
+               if (cutens(i) > 0.0_kind_phys) tem = tem + outqcs(i,k)
+               if (cuten(i)  > 0.0_kind_phys) tem = tem + outqc(i,k)
+               if (cutenm(i) > 0.0_kind_phys) tem = tem + outqcm(i,k)
+               
+               tem = dt * tem
+               
+               if (tem /= tem) tem = 0.0_kind_phys
+               
+               tem1 = max(0.0_kind_phys, min(1.0_kind_phys, (tcr - t(i,k))*tcrf))
+               
+               new_cliw(i,k) = 0.0_kind_phys
+               new_clcw(i,k) = 0.0_kind_phys
+               dcliw(i,k)    = 0.0_kind_phys
+               dclcw(i,k)    = 0.0_kind_phys
+               
+               if (clcw(i,k) > -999.0_kind_phys) then
+                  new_cliw(i,k) = max(0.0_kind_phys, cliw(i,k) + tem * tem1)
+                  new_clcw(i,k) = max(0.0_kind_phys, clcw(i,k) + tem * (1.0_kind_phys - tem1))
+                  dcliw(i,k) = (new_cliw(i,k) - cliw(i,k)) / dt
+                  dclcw(i,k) = (new_clcw(i,k) - clcw(i,k)) / dt
+               else
+                  new_cliw(i,k) = max(0.0_kind_phys, cliw(i,k) + tem)
+                  dcliw(i,k) = (new_cliw(i,k) - cliw(i,k)) / dt
+               endif
+               
+            enddo
+
+            !LB: legacy code:
+            !gdc(i,1,10)=forcing(i,1)
+            !gdc(i,2,10)=forcing(i,2)
+            !gdc(i,3,10)=forcing(i,3)
+            !gdc(i,4,10)=forcing(i,4)
+            !gdc(i,5,10)=forcing(i,5)
+            !gdc(i,6,10)=forcing(i,6)
+            !gdc(i,7,10)=forcing(i,7)
+            !gdc(i,8,10)=forcing(i,8)
+            !gdc(i,10,10)=xmb(i)
+            !gdc(i,11,10)=xmbm(i)
+            !gdc(i,12,10)=xmbs(i)
+            !gdc(i,13,10)=hfx(i)
+            !gdc(i,15,10)=qfx(i)
+            !gdc(i,16,10)=pret(i)*3600.
+
+            !LB: forcing arrays not populated
             maxupmf(i)=0.
             if(forcing2(i,6).gt.0.)then
                maxupmf(i)=maxval(xmb(i)*zu(i,kts:ktf)/forcing2(i,6))
@@ -1246,48 +1374,69 @@ contains
             if(ktop(i).gt.2 .and.pret(i).gt.0.)dt_mf(i,ktop(i)-1)=ud_mf(i,ktop(i))
          endif
       enddo
-!$acc end parallel
+
 !$acc kernels
-      do i=its,itf
-         if(pret(i).gt.0.)then
-            cactiv(i)=1
-            raincv(i)=.001*(cutenm(i)*pretm(i)+cutens(i)*prets(i)+cuten(i)*pret(i))*dt
-         else
-            cactiv(i)=0
-            if(pretm(i).gt.0)raincv(i)=.001*cutenm(i)*pretm(i)*dt
-         endif   ! pret > 0
+      do i = its, itf
+
+         raincv(i)   = 0.0_kind_phys
+         cactiv(i)   = 0
+         cactiv_m(i) = 0
          
-         if(pretm(i).gt.0)then
-            cactiv_m(i)=1
+         ! Old logic: deep activates total convective precip.
+         if (cuten(i) > 0.0_kind_phys .and. pret(i) > 0.0_kind_phys) then
+            
+            raincv(i) = raincv(i) + 0.001_kind_phys * pret(i) * dt
+            cactiv(i) = 1
+            
+            ! In old code, shallow contribution was included only in the deep branch.
+            if (cutens(i) > 0.0_kind_phys .and. prets(i) > 0.0_kind_phys) then
+               raincv(i) = raincv(i) + 0.001_kind_phys * prets(i) * dt
+            endif
+            
+            if (cutenm(i) > 0.0_kind_phys .and. pretm(i) > 0.0_kind_phys) then
+               raincv(i) = raincv(i) + 0.001_kind_phys * pretm(i) * dt
+            endif
+            
          else
-            cactiv_m(i)=0
+            
+            ! Old fallback: mid only if deep is absent.
+            if (cutenm(i) > 0.0_kind_phys .and. pretm(i) > 0.0_kind_phys) then
+               raincv(i) = raincv(i) + 0.001_kind_phys * pretm(i) * dt
+            endif
+            
+         endif
+
+         if (cutenm(i) > 0.0_kind_phys .and. pretm(i) > 0.0_kind_phys) then
+            cactiv_m(i) = 1
          endif
          
-         ! Unify ccn
-         if(ccn_m(i).lt.ccn_gf(i))then
-            ccn_gf(i)=ccn_m(i)
+         ! Unify CCN
+         if (ccn_m(i) == ccn_m(i) .and. ccn_gf(i) == ccn_gf(i)) then
+            if (ccn_m(i) < ccn_gf(i)) ccn_gf(i) = ccn_m(i)
          endif
          
-         if(ccn_gf(i)<0) ccn_gf(i)=0
+         if (ccn_gf(i) /= ccn_gf(i) .or. ccn_gf(i) < 0.0_kind_phys) then
+            ccn_gf(i) = 0.0_kind_phys
+         endif
          
-         ! Convert ccn back to aod
-         aod_gf(i)=0.0027*(ccn_gf(i)**0.64)
-         if(aod_gf(i)<0.007)then
-            aod_gf(i)=0.007
-            ccn_gf(i)=(aod_gf(i)/0.0027)**(1/0.640)
-         elseif(aod_gf(i)>aodc0)then
-            aod_gf(i)=aodc0
-            ccn_gf(i)=(aod_gf(i)/0.0027)**(1/0.640)
+         ! Convert CCN back to AOD
+         aod_gf(i) = 0.0027_kind_phys * (ccn_gf(i)**0.64_kind_phys)
+         
+         if (aod_gf(i) < 0.007_kind_phys) then
+            aod_gf(i) = 0.007_kind_phys
+            ccn_gf(i) = (aod_gf(i)/0.0027_kind_phys)**(1.0_kind_phys/0.640_kind_phys)
+         elseif (aod_gf(i) > aodc0) then
+            aod_gf(i) = aodc0
+            ccn_gf(i) = (aod_gf(i)/0.0027_kind_phys)**(1.0_kind_phys/0.640_kind_phys)
          endif
          
       enddo
 !$acc end kernels
-100   continue
       !
             
 ! Scale dry mixing ratios for water wapor and cloud water to specific humidy / moist mixing ratios
-        do i=its,ite
-           do k=kts,kte
+        do i=its,itf
+           do k=kts,ktf
             new_qv_spechum(i,k) = qv(i,k)/(1.0_kind_phys+qv(i,k))
             cnvw_moist(i,k) = cnvw(i,k)/(1.0_kind_phys+qv(i,k))
             ten_q(i,k,ntqv) = (new_qv_spechum(i,k) - qv_spechum(i,k))/dt
