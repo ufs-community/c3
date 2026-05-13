@@ -1244,6 +1244,15 @@ module module_cu_c3
          dd_massdetro(:,i) = xmb(i)*dd_massdetro(:,i)
          zenv        (:,i) = xmb(i)*zenv        (:,i)
       end do
+      !Initialize:
+      do vtp_index = get_num_elements(vec_ok),1,-1
+         i = get_data_value(vec_ok,vtp_index)
+         subten_Q    (:,i) = 0.
+         subten_H    (:,i) = 0.
+         subten_T    (:,i) = 0.
+         subten_U    (:,i) = 0.
+         subten_V    (:,i) = 0.
+      end do
       if(use_sub3d > 0) then
         do vtp_index = get_num_elements(vec_ok),1,-1
          i = get_data_value(vec_ok,vtp_index)
@@ -3605,6 +3614,15 @@ module module_cu_c3
          enddo
       endif
        !--- criteria: if abs (dT/dt or dQ/dt) > 100 K/day => fix dT/dt, dQ/dt and xmb
+      !Initialize:
+      do vtp_index = get_num_elements(vec_ok),1,-1
+         i = get_data_value(vec_ok,vtp_index)
+         subten_T(:,i)=0.
+         subten_Q(:,i)=0.
+         subten_V(:,i)=0.
+         subten_U(:,i)=0.
+      enddo
+      
       if( MAX_TQ_TEND > 1.e-2) then
          do vtp_index = get_num_elements(vec_ok),1,-1
            i = get_data_value(vec_ok,vtp_index)
@@ -3619,6 +3637,8 @@ module module_cu_c3
                  dellat  (k,i)=MAX_TQ_TEND/(xmb(i)*86400)*sign(1., dellat  (k,i))
                  if(use_sub3d > 0) then
                     subten_T(k,i)=MAX_TQ_TEND/(xmb(i)*86400)*sign(1., subten_T(k,i))
+                 else
+                    subten_T(k,i)=0.
                  endif
               endif
               tend1d(2)  = tend1d(2)  +  abs(dp*xmb(i) * 86400._kind_phys*(dellat(k,i))*temp2theta)
@@ -3632,6 +3652,8 @@ module module_cu_c3
                  dellaq  (k,i)=MAX_TQ_TEND/(xmb(i)*86400*(c_alvl/c_cp))*sign(1., dellaq  (k,i))
                  if(use_sub3d > 0) then
                     subten_Q(k,i)=MAX_TQ_TEND/(xmb(i)*86400*(c_alvl/c_cp))*sign(1., subten_Q(k,i))
+                 else
+                    subten_Q(k,i)=0.
                  endif
               endif
               tend1d(4)  = tend1d(4)  +  abs(dp*xmb(i) * 86400._kind_phys*(dellaq(k,i))*(c_alvl/c_cp))
@@ -6753,7 +6775,15 @@ module module_cu_c3
                   dellv   (k,i) = tend2d(k,5)
                end do
       end do
-      
+
+      !--initialize
+      do vtp_index = get_num_elements(vec_ok),1,-1
+         i = get_data_value(vec_ok,vtp_index)
+         subten_q    (:,i) = 0.
+         subten_h    (:,i) = 0.
+         subten_U    (:,i) = 0.
+         subten_V    (:,i) = 0
+      end do
       if(use_sub3d > 0) then
          do vtp_index = get_num_elements(vec_ok),1,-1
                i = get_data_value(vec_ok,vtp_index)
@@ -6820,7 +6850,8 @@ module module_cu_c3
                         (1.+(c_xlf/c_alvl)*(1.-p_liq_ice(k,i)))))*mbdt(i) + tn(k,i)
 
             enddo
-      enddo
+         enddo
+      subten_t(:,:)=0.
       !--- temp tendency due to the environmental subsidence
       if(use_sub3d > 0) then 
         do vtp_index = get_num_elements(vec_ok),1,-1
@@ -7264,6 +7295,17 @@ module module_cu_c3
       !-- formulation for the subsidence tendency
       !-- del X / del t = detr_up zu_up (X_c_up - X_env) +  detr_dn zu_dn (X_c_dn - X_env) + zu_env * del X_env / del z
       !-- subten = zu_env * del X_env / del z
+
+      !Initialize
+      do vtp_index = get_num_elements(vec_ok),1,-1
+         i = get_data_value(vec_ok,vtp_index)
+         subten_Q(:,i) = 0.
+         subten_H(:,i) = 0.
+         subten_U(:,i) = 0.
+         subten_V(:,i) = 0.
+         subten_T(:,i) = 0.
+      enddo
+      
       if( use_sub3d > 0) then
           do vtp_index = get_num_elements(vec_ok),1,-1
              i = get_data_value(vec_ok,vtp_index)
