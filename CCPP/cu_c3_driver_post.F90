@@ -30,8 +30,8 @@ module cu_c3_driver_post
       real(kind_phys),  intent(out) :: prevsq(:,:)
       integer,          intent(in)  :: cactiv(:)
       integer,          intent(in)  :: cactiv_m(:)
-      real(kind_phys),  intent(out) :: conv_act(:)
-      real(kind_phys),  intent(out) :: conv_act_m(:)
+      real(kind_phys),  intent(inout) :: conv_act(:)
+      real(kind_phys),  intent(inout) :: conv_act_m(:)
       ! for Radar reflectivity
       real(kind_phys),  intent(in)  :: dt
       real(kind_phys),  intent(in)  :: raincv(:)

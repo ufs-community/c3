@@ -13,6 +13,7 @@
 
 module cu_c3_driver_ccpp
 
+   use physcons, only: con_rd, con_fvirt
    use mod_cu_kinds, only: kind_phys
    use modNegCheck, only: neg_check
    use progsigma, only: progsigma_calc
@@ -620,7 +621,7 @@ contains
            po(i,k)  = p2d(i,k)
            
            rhoi(i,k) = 100.*p2d(i,k) / &
-                (287.04*(temp_new_ADV(i,k)*(1.+0.608*qv_new_ADV(i,k))))
+                (con_rd*(temp_new_ADV(i,k)*(1.+con_fvirt*qv_new_ADV(i,k))))
                       
            ! shallow/PBL state
            tshall(i,k) = temp_new_BL(i,k)
@@ -645,7 +646,7 @@ contains
      
       
 !$acc end kernels
-123  format(1x,i2,1x,2(1x,f8.0),1x,2(1x,f8.3),3(1x,e13.5))
+
 !$acc kernels
      do i=its,itf
       do k=kts,kpbli(i)
@@ -820,8 +821,8 @@ contains
          pqen = qv_old(i,1)
          paph = 100.0_kind_phys * psur(i)
          
-         zrho = paph / (287.04_kind_phys * pten * &
-              (1.0_kind_phys + 0.608_kind_phys*pqen))
+         zrho = paph / (con_rd * pten * &
+              (1.0_kind_phys + con_fvirt*pqen))
          
          h_sfc_flux(i)  = hfx(i)
          le_sfc_flux(i) = qfx(i)
