@@ -30,7 +30,7 @@
   intent = in
 [fhour]
   standard_name = forecast_time
-  long_name = curent forecast time
+  long_name = current forecast time
   units = h
   dimensions = ()
   type = real
