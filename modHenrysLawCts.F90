@@ -179,7 +179,6 @@ module modHenrysLawCts
 !     of Potential Importance in
 !     Environmental Chemistry (Version 3)
 !     http://www.henrys-law.org
-!     * indica artigos nao encontrados nesse endere�o eletronico
    real, parameter, dimension(p_nspecies_hl) :: p_hstar = (/ &
                                               1.10e-2, & ! O3 - 001
                                               8.30e+4, & ! H2O2 - 002
