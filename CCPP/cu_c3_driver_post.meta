@@ -74,7 +74,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  intent = out
+  intent = inout
 [conv_act_m]
   standard_name = consecutive_calls_for_grell_freitas_mid_level_convection
   long_name = Memory counter for GF midlevel
@@ -82,7 +82,7 @@
   dimensions = (horizontal_loop_extent)
   type = real
   kind = kind_phys
-  intent = out
+  intent = inout
 [dt]
   standard_name = timestep_for_physics
   long_name = physics time step
