@@ -13,7 +13,6 @@
 
 module cu_c3_driver_ccpp
 
-   use physcons, only: con_rd, con_fvirt
    use mod_cu_kinds, only: kind_phys
    use modNegCheck, only: neg_check
    use progsigma, only: progsigma_calc
@@ -131,7 +130,6 @@ contains
       integer, dimension(:), intent(inout), optional :: cactiv, cactiv_m
       real(kind_phys), dimension(:,:), intent(out) :: ten_t, ten_u, ten_v, dcliw, dclcw
       real(kind_phys), dimension(:,:,:), intent(out) :: ten_q
-
       character(len=*), intent(out) :: errmsg
       integer, intent(out) :: errflg
 
@@ -621,7 +619,7 @@ contains
            po(i,k)  = p2d(i,k)
            
            rhoi(i,k) = 100.*p2d(i,k) / &
-                (con_rd*(temp_new_ADV(i,k)*(1.+con_fvirt*qv_new_ADV(i,k))))
+                (r_d*(temp_new_ADV(i,k)*(1.+fv*qv_new_ADV(i,k))))
                       
            ! shallow/PBL state
            tshall(i,k) = temp_new_BL(i,k)
@@ -821,8 +819,8 @@ contains
          pqen = qv_old(i,1)
          paph = 100.0_kind_phys * psur(i)
          
-         zrho = paph / (con_rd * pten * &
-              (1.0_kind_phys + con_fvirt*pqen))
+         zrho = paph / (r_d * pten * &
+              (1.0_kind_phys + fv*pqen))
          
          h_sfc_flux(i)  = hfx(i)
          le_sfc_flux(i) = qfx(i)
