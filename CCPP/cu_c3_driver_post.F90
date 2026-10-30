@@ -15,7 +15,7 @@ module cu_c3_driver_post
 !> \section arg_table_cu_c3_driver_post_run Argument Table
 !! \htmlinclude cu_c3_driver_post_run.html
 !!
-   subroutine cu_c3_driver_post_run (im, km, t, q, prevst, prevsq, cactiv, cactiv_m, conv_act, conv_act_m, dt, garea, raincv, maxupmf, refl_10cm, errmsg, errflg)
+   subroutine cu_c3_driver_post_run (im, km, cactiv, cactiv_m, conv_act, conv_act_m, dt, raincv, maxupmf, refl_10cm, errmsg, errflg)
 
       use machine, only: kind_phys
 
@@ -23,11 +23,6 @@ module cu_c3_driver_post
 
       ! Interface variables
       integer,          intent(in)  :: im, km
-      real(kind_phys),  intent(in)  :: t(:,:)
-      real(kind_phys),  intent(in)  :: q(:,:)
-      real(kind_phys), dimension(:),intent(in) :: garea
-      real(kind_phys),  intent(out) :: prevst(:,:)
-      real(kind_phys),  intent(out) :: prevsq(:,:)
       integer,          intent(in)  :: cactiv(:)
       integer,          intent(in)  :: cactiv_m(:)
       real(kind_phys),  intent(inout) :: conv_act(:)
@@ -38,7 +33,7 @@ module cu_c3_driver_post
       real(kind_phys),  intent(in)  :: maxupmf(:)
       real(kind_phys),  intent(inout) :: refl_10cm(:,:)
       character(len=*), intent(out) :: errmsg
-!$acc declare copyin(t,q,cactiv,cactiv_m) copyout(prevst,prevsq,conv_act,conv_act_m)
+!$acc declare copyin(cactiv,cactiv_m) copyout(conv_act,conv_act_m)
       integer, intent(out)          :: errflg
 
       ! Local variables
@@ -52,9 +47,6 @@ module cu_c3_driver_post
       errflg = 0
 
 !$acc kernels
-      prevst(:,:) = t(:,:)
-      prevsq(:,:) = q(:,:)
-
       do i = 1, im
         if (cactiv(i).gt.0) then
           conv_act(i) = conv_act(i)+1.0
