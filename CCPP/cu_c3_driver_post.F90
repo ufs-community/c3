@@ -15,7 +15,7 @@ module cu_c3_driver_post
 !> \section arg_table_cu_c3_driver_post_run Argument Table
 !! \htmlinclude cu_c3_driver_post_run.html
 !!
-   subroutine cu_c3_driver_post_run (im, km, cactiv, cactiv_m, conv_act, conv_act_m, dt, garea, raincv, maxupmf, refl_10cm, errmsg, errflg)
+   subroutine cu_c3_driver_post_run (im, km, cactiv, cactiv_m, conv_act, conv_act_m, dt, raincv, maxupmf, refl_10cm, errmsg, errflg)
 
       use machine, only: kind_phys
 
@@ -23,7 +23,6 @@ module cu_c3_driver_post
 
       ! Interface variables
       integer,          intent(in)  :: im, km
-      real(kind_phys), dimension(:),intent(in) :: garea
       integer,          intent(in)  :: cactiv(:)
       integer,          intent(in)  :: cactiv_m(:)
       real(kind_phys),  intent(inout) :: conv_act(:)
