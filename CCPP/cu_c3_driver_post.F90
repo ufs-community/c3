@@ -17,7 +17,7 @@ module cu_c3_driver_post
 !!
    subroutine cu_c3_driver_post_run (im, km, t, q, prevst, prevsq, cactiv, cactiv_m, conv_act, conv_act_m, dt, garea, raincv, maxupmf, refl_10cm, errmsg, errflg)
 
-      use machine, only: kind_phys
+      use ccpp_kinds, only: kind_phys
 
       implicit none
 
