@@ -1,7 +1,7 @@
 [ccpp-table-properties]
   name = cu_c3_driver_pre
   type = scheme
-  dependencies = ../../../hooks/machine.F
+  dependencies =
 
 ########################################################################
 [ccpp-arg-table]
