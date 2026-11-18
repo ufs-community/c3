@@ -1,6 +1,6 @@
 module modNegCheck
 
-   use machine, only: kind_phys
+   use mod_cu_kinds, only: kind_phys
 
    implicit none
    private
